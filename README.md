@@ -55,6 +55,11 @@ Aplikasi Point of Sales berbasis Laravel 12 dengan dukungan:
 
 	`php artisan serve`
 
+## Port Development
+
+- Backend Laravel: `http://127.0.0.1:8001`
+- Vite dev server (HMR): `http://127.0.0.1:8002`
+
 ## Dokumentasi Perubahan
 
 - Dokumentasi perubahan sesi ini: `docs/changes/20260417-initial-pos.md`
