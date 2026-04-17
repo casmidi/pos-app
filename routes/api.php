@@ -6,9 +6,11 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SaleController;
 use Illuminate\Support\Facades\Route;
 
-Route::apiResources([
-    'categories' => CategoryController::class,
-    'products' => ProductController::class,
-    'customers' => CustomerController::class,
-    'sales' => SaleController::class,
-]);
+Route::name('api.')->group(function (): void {
+    Route::apiResources([
+        'categories' => CategoryController::class,
+        'products' => ProductController::class,
+        'customers' => CustomerController::class,
+        'sales' => SaleController::class,
+    ]);
+});
