@@ -16,7 +16,8 @@
             <div class="card-body row">
                 <div class="form-group col-md-6">
                     <label>Nama</label>
-                    <input type="text" name="name" class="form-control" value="{{ old('name', $customer->name) }}" required>
+                    <input type="text" name="name" class="form-control" value="{{ old('name', $customer->name) }}"
+                        required>
                 </div>
                 <div class="form-group col-md-3">
                     <label>Telepon</label>

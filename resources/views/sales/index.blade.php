@@ -41,7 +41,8 @@
                                 <form action="{{ route('sales.destroy', $sale) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Hapus transaksi ini?')">Hapus</button>
+                                    <button type="submit" class="btn btn-xs btn-danger"
+                                        onclick="return confirm('Hapus transaksi ini?')">Hapus</button>
                                 </form>
                             </td>
                         </tr>

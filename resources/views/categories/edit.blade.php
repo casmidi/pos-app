@@ -16,7 +16,8 @@
             <div class="card-body">
                 <div class="form-group">
                     <label>Nama Kategori</label>
-                    <input type="text" name="name" class="form-control" value="{{ old('name', $category->name) }}" required>
+                    <input type="text" name="name" class="form-control" value="{{ old('name', $category->name) }}"
+                        required>
                 </div>
                 <div class="form-group">
                     <label>Deskripsi</label>

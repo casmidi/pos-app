@@ -20,3 +20,23 @@
         </button>
     </div>
 @endif
+
+{{-- Hidden logout form (triggered by sidebar Keluar link) --}}
+@auth
+    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+        @csrf
+    </form>
+    @push('js')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var link = document.getElementById('logout-link');
+                if (link) {
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        document.getElementById('logout-form').submit();
+                    });
+                }
+            });
+        </script>
+    @endpush
+@endauth

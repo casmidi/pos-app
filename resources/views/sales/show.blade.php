@@ -28,7 +28,9 @@
         </div>
         <div class="col-md-8">
             <div class="card card-outline card-primary">
-                <div class="card-header"><h3 class="card-title">Item</h3></div>
+                <div class="card-header">
+                    <h3 class="card-title">Item</h3>
+                </div>
                 <div class="card-body table-responsive p-0">
                     <table class="table table-striped mb-0">
                         <thead>
@@ -56,12 +58,33 @@
                 <div class="card-footer row">
                     <div class="col-md-6 ml-auto">
                         <table class="table table-sm mb-0">
-                            <tr><th>Subtotal</th><td class="text-right">Rp {{ number_format((float) $sale->subtotal, 0, ',', '.') }}</td></tr>
-                            <tr><th>Diskon</th><td class="text-right">Rp {{ number_format((float) $sale->discount_total, 0, ',', '.') }}</td></tr>
-                            <tr><th>Pajak</th><td class="text-right">Rp {{ number_format((float) $sale->tax_total, 0, ',', '.') }}</td></tr>
-                            <tr><th>Grand Total</th><td class="text-right font-weight-bold">Rp {{ number_format((float) $sale->grand_total, 0, ',', '.') }}</td></tr>
-                            <tr><th>Bayar</th><td class="text-right">Rp {{ number_format((float) $sale->paid_amount, 0, ',', '.') }}</td></tr>
-                            <tr><th>Kembalian</th><td class="text-right">Rp {{ number_format((float) $sale->change_amount, 0, ',', '.') }}</td></tr>
+                            <tr>
+                                <th>Subtotal</th>
+                                <td class="text-right">Rp {{ number_format((float) $sale->subtotal, 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Diskon</th>
+                                <td class="text-right">Rp {{ number_format((float) $sale->discount_total, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Pajak</th>
+                                <td class="text-right">Rp {{ number_format((float) $sale->tax_total, 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Grand Total</th>
+                                <td class="text-right font-weight-bold">Rp
+                                    {{ number_format((float) $sale->grand_total, 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Bayar</th>
+                                <td class="text-right">Rp {{ number_format((float) $sale->paid_amount, 0, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Kembalian</th>
+                                <td class="text-right">Rp {{ number_format((float) $sale->change_amount, 0, ',', '.') }}
+                                </td>
+                            </tr>
                         </table>
                     </div>
                 </div>

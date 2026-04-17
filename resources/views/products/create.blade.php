@@ -32,11 +32,13 @@
                 </div>
                 <div class="form-group col-md-4">
                     <label>Harga Modal</label>
-                    <input type="number" step="0.01" name="cost_price" class="form-control" value="{{ old('cost_price', 0) }}" required>
+                    <input type="number" step="0.01" name="cost_price" class="form-control"
+                        value="{{ old('cost_price', 0) }}" required>
                 </div>
                 <div class="form-group col-md-4">
                     <label>Harga Jual</label>
-                    <input type="number" step="0.01" name="sell_price" class="form-control" value="{{ old('sell_price', 0) }}" required>
+                    <input type="number" step="0.01" name="sell_price" class="form-control"
+                        value="{{ old('sell_price', 0) }}" required>
                 </div>
                 <div class="form-group col-md-4">
                     <label>Stok</label>
@@ -48,7 +50,8 @@
                 </div>
                 <div class="form-group col-md-12">
                     <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" value="1" @checked(old('is_active', true))>
+                        <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" value="1"
+                            @checked(old('is_active', true))>
                         <label class="custom-control-label" for="is_active">Produk aktif</label>
                     </div>
                 </div>

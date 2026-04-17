@@ -333,6 +333,19 @@ return [
             'route' => 'customers.index',
             'icon' => 'fas fa-fw fa-users',
         ],
+        ['header' => 'LAPORAN'],
+        [
+            'text'  => 'Laporan Penjualan',
+            'route' => 'reports.sales',
+            'icon'  => 'fas fa-fw fa-chart-line',
+        ],
+        ['header' => 'AKUN'],
+        [
+            'text'   => 'Keluar',
+            'url'    => '#',
+            'icon'   => 'fas fa-fw fa-sign-out-alt',
+            'id'     => 'logout-link',
+        ],
     ],
 
     /*

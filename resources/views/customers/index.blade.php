@@ -37,7 +37,8 @@
                                 <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Hapus data ini?')">Hapus</button>
+                                    <button type="submit" class="btn btn-xs btn-danger"
+                                        onclick="return confirm('Hapus data ini?')">Hapus</button>
                                 </form>
                             </td>
                         </tr>
