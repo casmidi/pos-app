@@ -1,0 +1,25 @@
+NOTULEN HARIAN
+Tanggal: 2026-04-17
+Proyek: POS Laravel
+
+Agenda:
+1. Inisialisasi struktur aplikasi Point of Sales.
+2. Implementasi CRUD web dan API untuk modul utama.
+3. Integrasi template AdminLTE.
+4. Persiapan dokumentasi perubahan dan proses push ke GitHub.
+
+Hasil:
+- Skema database POS sudah ditambahkan.
+- Model, relasi, controller, route, dan view CRUD sudah dibuat.
+- API resource untuk categories, products, customers, sales sudah aktif.
+- Dashboard POS dan tampilan AdminLTE sudah terpasang.
+- Dokumentasi perubahan harian dibuat.
+
+Kendala:
+- Migrasi PostgreSQL belum bisa dijalankan pada mesin ini karena driver pgsql belum tersedia.
+
+Rencana Lanjut:
+1. Aktifkan php_pgsql di environment lokal.
+2. Jalankan migrate dan seed.
+3. Uji alur transaksi end-to-end.
+4. Lanjut fitur laporan dan autentikasi per role.
