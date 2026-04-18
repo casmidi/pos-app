@@ -2,6 +2,26 @@
 
 @section('title', 'Laporan Pendapatan Penjualan')
 
+@section('css')
+    <style>
+        .report-filter .form-control {
+            min-width: 180px;
+        }
+
+        .report-table table {
+            min-width: 980px;
+        }
+
+        @media (max-width: 767.98px) {
+
+            .report-filter .form-control,
+            .report-filter .btn {
+                width: 100%;
+            }
+        }
+    </style>
+@stop
+
 @section('content_header')
     <h1>Laporan Pendapatan Penjualan</h1>
 @stop
@@ -11,31 +31,41 @@
 
     {{-- Filter Form --}}
     <div class="card card-outline card-primary mb-4">
-        <div class="card-header"><h3 class="card-title">Filter Tanggal</h3></div>
+        <div class="card-header">
+            <h3 class="card-title">Filter Tanggal</h3>
+        </div>
         <div class="card-body">
-            <form method="GET" action="{{ route('reports.sales') }}" class="form-inline flex-wrap gap-2">
-                <div class="form-group mr-2 mb-2">
-                    <label class="mr-1">Dari</label>
-                    <input
-                        type="date"
-                        name="date_from"
-                        value="{{ $dateFrom->format('Y-m-d') }}"
-                        class="form-control @error('date_from') is-invalid @enderror"
-                    >
-                    @error('date_from')<span class="invalid-feedback">{{ $message }}</span>@enderror
+            <form method="GET" action="{{ route('reports.sales') }}" class="report-filter row align-items-end">
+                <div class="form-group col-12 col-md-4 col-lg-3 mb-2">
+                    <label>Dari</label>
+                    <input type="date" name="date_from" value="{{ $dateFrom->format('Y-m-d') }}"
+                        class="form-control @error('date_from') is-invalid @enderror">
+                    @error('date_from')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
-                <div class="form-group mr-2 mb-2">
-                    <label class="mr-1">Sampai</label>
-                    <input
-                        type="date"
-                        name="date_to"
-                        value="{{ $dateTo->format('Y-m-d') }}"
-                        class="form-control @error('date_to') is-invalid @enderror"
-                    >
-                    @error('date_to')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                <div class="form-group col-12 col-md-4 col-lg-3 mb-2">
+                    <label>Sampai</label>
+                    <input type="date" name="date_to" value="{{ $dateTo->format('Y-m-d') }}"
+                        class="form-control @error('date_to') is-invalid @enderror">
+                    @error('date_to')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
-                <button type="submit" class="btn btn-primary mb-2">Tampilkan</button>
-                <a href="{{ route('reports.sales') }}" class="btn btn-default mb-2 ml-1">Reset</a>
+                <div class="form-group col-12 col-md-4 col-lg-3 mb-2">
+                    <button type="submit" class="btn btn-primary">Tampilkan</button>
+                    <a href="{{ route('reports.sales') }}" class="btn btn-default mt-2 mt-md-0 ml-md-1">Reset</a>
+                </div>
+                <div class="form-group col-12 col-lg-auto mb-2 ml-lg-auto">
+                    <a href="{{ route('reports.sales.export.excel', request()->only('date_from', 'date_to')) }}"
+                        class="btn btn-success">
+                        <i class="fas fa-file-excel mr-1"></i> Excel
+                    </a>
+                    <a href="{{ route('reports.sales.export.pdf', request()->only('date_from', 'date_to')) }}"
+                        class="btn btn-danger ml-1">
+                        <i class="fas fa-file-pdf mr-1"></i> PDF
+                    </a>
+                </div>
             </form>
         </div>
     </div>
@@ -94,12 +124,12 @@
         <div class="card-header">
             <h3 class="card-title">
                 Detail Transaksi
-                <span class="badge badge-secondary ml-2">
+                <span class="badge badge-secondary ml-md-2 mt-2 mt-md-0">
                     {{ $dateFrom->format('d/m/Y') }} – {{ $dateTo->format('d/m/Y') }}
                 </span>
             </h3>
         </div>
-        <div class="card-body table-responsive p-0">
+        <div class="card-body table-responsive p-0 report-table">
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
@@ -129,7 +159,8 @@
                             <td class="text-right">{{ number_format($sale->subtotal, 0, ',', '.') }}</td>
                             <td class="text-right">{{ number_format($sale->discount_total, 0, ',', '.') }}</td>
                             <td class="text-right">{{ number_format($sale->tax_total, 0, ',', '.') }}</td>
-                            <td class="text-right font-weight-bold">{{ number_format($sale->grand_total, 0, ',', '.') }}</td>
+                            <td class="text-right font-weight-bold">{{ number_format($sale->grand_total, 0, ',', '.') }}
+                            </td>
                             <td><span class="badge badge-info">{{ ucfirst($sale->payment_method) }}</span></td>
                             <td>
                                 <a href="{{ route('sales.show', $sale) }}" class="btn btn-xs btn-default">

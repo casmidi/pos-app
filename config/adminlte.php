@@ -339,6 +339,11 @@ return [
             'route' => 'reports.sales',
             'icon'  => 'fas fa-fw fa-chart-line',
         ],
+        [
+            'text'  => 'Laporan Barang Terlaris',
+            'route' => 'reports.top-products',
+            'icon'  => 'fas fa-fw fa-trophy',
+        ],
         ['header' => 'AKUN'],
         [
             'text'   => 'Keluar',
