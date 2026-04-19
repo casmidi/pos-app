@@ -8,11 +8,51 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::query()->with('category')->latest()->paginate(10);
+        $search = trim((string) $request->string('q'));
+        $allowedSorts = [
+            'sku' => 'sku',
+            'name' => 'name',
+            'category' => 'category',
+            'sell_price' => 'sell_price',
+            'stock' => 'stock',
+            'status' => 'is_active',
+        ];
+        $sort = $request->string('sort')->toString();
+        $direction = strtolower($request->string('direction')->toString()) === 'asc' ? 'asc' : 'desc';
 
-        return view('products.index', compact('products'));
+        if (! array_key_exists($sort, $allowedSorts)) {
+            $sort = 'created_at';
+            $direction = 'desc';
+        }
+
+        $products = Product::query()
+            ->with('category')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($nestedQuery) use ($search) {
+                    $nestedQuery->where('sku', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%")
+                        ->orWhereHas('category', function ($categoryQuery) use ($search) {
+                            $categoryQuery->where('name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($sort === 'category', function ($query) use ($direction) {
+                $query->orderBy(
+                    Category::query()
+                        ->select('name')
+                        ->whereColumn('categories.id', 'products.category_id')
+                        ->limit(1),
+                    $direction,
+                );
+            }, function ($query) use ($sort, $direction) {
+                $query->orderBy($sort, $direction);
+            })
+            ->paginate(10)
+            ->withQueryString();
+
+        return $this->respond($request, 'products.index', compact('products', 'search', 'sort', 'direction'), $products);
     }
 
     public function create()
@@ -37,16 +77,22 @@ class ProductController extends Controller
 
         $validated['is_active'] = (bool) ($validated['is_active'] ?? false);
 
-        Product::query()->create($validated);
+        $product = Product::query()->create($validated);
 
-        return redirect()->route('products.index')->with('success', 'Produk berhasil ditambahkan.');
+        return $this->respondAfterMutation(
+            $request,
+            'products.index',
+            'Produk berhasil ditambahkan.',
+            $product->load('category'),
+            201,
+        );
     }
 
-    public function show(Product $product)
+    public function show(Request $request, Product $product)
     {
         $product->load('category');
 
-        return view('products.show', compact('product'));
+        return $this->respond($request, 'products.show', compact('product'), $product);
     }
 
     public function edit(Product $product)
@@ -73,13 +119,23 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        return redirect()->route('products.index')->with('success', 'Produk berhasil diperbarui.');
+        return $this->respondAfterMutation(
+            $request,
+            'products.index',
+            'Produk berhasil diperbarui.',
+            $product->fresh()->load('category'),
+        );
     }
 
-    public function destroy(Product $product)
+    public function destroy(Request $request, Product $product)
     {
         $product->delete();
 
-        return redirect()->route('products.index')->with('success', 'Produk berhasil dihapus.');
+        return $this->respondAfterMutation(
+            $request,
+            'products.index',
+            'Produk berhasil dihapus.',
+            ['message' => 'Product deleted'],
+        );
     }
 }

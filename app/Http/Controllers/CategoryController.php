@@ -7,11 +7,34 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::query()->latest()->paginate(10);
+        $search = trim((string) $request->string('q'));
+        $allowedSorts = [
+            'id' => 'id',
+            'name' => 'name',
+            'description' => 'description',
+        ];
+        $sort = $request->string('sort')->toString();
+        $direction = strtolower($request->string('direction')->toString()) === 'asc' ? 'asc' : 'desc';
 
-        return view('categories.index', compact('categories'));
+        if (! array_key_exists($sort, $allowedSorts)) {
+            $sort = 'created_at';
+            $direction = 'desc';
+        }
+
+        $categories = Category::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($nestedQuery) use ($search) {
+                    $nestedQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy($sort, $direction)
+            ->paginate(10)
+            ->withQueryString();
+
+        return $this->respond($request, 'categories.index', compact('categories', 'search', 'sort', 'direction'), $categories);
     }
 
     public function create()
@@ -26,14 +49,20 @@ class CategoryController extends Controller
             'description' => ['nullable', 'string'],
         ]);
 
-        Category::query()->create($validated);
+        $category = Category::query()->create($validated);
 
-        return redirect()->route('categories.index')->with('success', 'Kategori berhasil ditambahkan.');
+        return $this->respondAfterMutation(
+            $request,
+            'categories.index',
+            'Kategori berhasil ditambahkan.',
+            $category,
+            201,
+        );
     }
 
-    public function show(Category $category)
+    public function show(Request $request, Category $category)
     {
-        return view('categories.show', compact('category'));
+        return $this->respond($request, 'categories.show', compact('category'), $category);
     }
 
     public function edit(Category $category)
@@ -50,13 +79,23 @@ class CategoryController extends Controller
 
         $category->update($validated);
 
-        return redirect()->route('categories.index')->with('success', 'Kategori berhasil diperbarui.');
+        return $this->respondAfterMutation(
+            $request,
+            'categories.index',
+            'Kategori berhasil diperbarui.',
+            $category->fresh(),
+        );
     }
 
-    public function destroy(Category $category)
+    public function destroy(Request $request, Category $category)
     {
         $category->delete();
 
-        return redirect()->route('categories.index')->with('success', 'Kategori berhasil dihapus.');
+        return $this->respondAfterMutation(
+            $request,
+            'categories.index',
+            'Kategori berhasil dihapus.',
+            ['message' => 'Category deleted'],
+        );
     }
 }

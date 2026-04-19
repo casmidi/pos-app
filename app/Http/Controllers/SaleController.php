@@ -7,21 +7,90 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\StockMovement;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class SaleController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View|JsonResponse|Response
     {
+        $search = trim((string) $request->string('q'));
+        $allowedSorts = [
+            'invoice_no' => 'invoice_no',
+            'sale_date' => 'sale_date',
+            'customer' => 'customer',
+            'grand_total' => 'grand_total',
+            'paid_amount' => 'paid_amount',
+            'change_amount' => 'change_amount',
+        ];
+        $sort = $request->string('sort')->toString();
+        $direction = strtolower($request->string('direction')->toString()) === 'asc' ? 'asc' : 'desc';
+
+        if (! array_key_exists($sort, $allowedSorts)) {
+            $sort = 'sale_date';
+            $direction = 'desc';
+        }
+
+        $amountSorts = ['grand_total', 'paid_amount', 'change_amount'];
+
         $sales = Sale::query()
             ->with(['customer', 'user'])
-            ->latest('sale_date')
-            ->paginate(10);
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($nestedQuery) use ($search) {
+                    $nestedQuery->where('invoice_no', 'like', "%{$search}%")
+                        ->orWhere('payment_method', 'like', "%{$search}%")
+                        ->orWhereHas('customer', function ($customerQuery) use ($search) {
+                            $customerQuery->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($sort === 'customer', function ($query) use ($direction) {
+                $query->leftJoin('customers as sort_customers', 'sort_customers.id', '=', 'sales.customer_id')
+                    ->select('sales.*')
+                    ->orderBy('sort_customers.name', $direction)
+                    ->orderBy('sales.id', 'desc');
+            }, function ($query) use ($sort, $direction, $amountSorts) {
+                if (in_array($sort, $amountSorts, true)) {
+                    $query->orderBy('sales.' . $sort, $direction)
+                        ->orderBy('sales.id', 'desc');
 
-        return view('sales.index', compact('sales'));
+                    return;
+                }
+
+                if ($sort === 'sale_date') {
+                    $query->orderBy('sales.sale_date', $direction)
+                        ->orderBy('sales.id', 'desc');
+
+                    return;
+                }
+
+                if ($sort === 'invoice_no') {
+                    $query->orderBy('sales.invoice_no', $direction)
+                        ->orderBy('sales.id', 'desc');
+
+                    return;
+                }
+
+                $query->orderBy('sales.' . $sort, $direction)
+                    ->orderBy('sales.id', 'desc');
+            })
+            ->paginate(10)
+            ->withQueryString();
+
+        $viewData = compact('sales', 'search', 'sort', 'direction');
+
+        if ($this->isGridAsyncRequest($request)) {
+            return response()->view('sales.partials.grid', $viewData);
+        }
+
+        return $this->respond($request, 'sales.index', $viewData, $sales);
     }
 
     public function create(): View
@@ -32,11 +101,11 @@ class SaleController extends Controller
         return view('sales.create', compact('products', 'customers'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $this->validateSaleRequest($request);
 
-        DB::transaction(function () use ($validated): void {
+        $sale = DB::transaction(function () use ($validated): Sale {
             $totals = $this->buildTotals($validated['items'], (float) ($validated['tax_total'] ?? 0));
 
             $sale = Sale::query()->create([
@@ -55,16 +124,24 @@ class SaleController extends Controller
             ]);
 
             $this->syncSaleItemsAndStock($sale, $validated['items'], false);
+
+            return $sale;
         });
 
-        return redirect()->route('sales.index')->with('success', 'Transaksi berhasil dibuat.');
+        return $this->respondAfterMutation(
+            $request,
+            'sales.index',
+            'Transaksi berhasil dibuat.',
+            $sale->load(['customer', 'user', 'items.product']),
+            201,
+        );
     }
 
-    public function show(Sale $sale): View
+    public function show(Request $request, Sale $sale): View|JsonResponse
     {
         $sale->load(['customer', 'user', 'items.product']);
 
-        return view('sales.show', compact('sale'));
+        return $this->respond($request, 'sales.show', compact('sale'), $sale);
     }
 
     public function edit(Sale $sale): View
@@ -76,7 +153,7 @@ class SaleController extends Controller
         return view('sales.edit', compact('sale', 'products', 'customers'));
     }
 
-    public function update(Request $request, Sale $sale): RedirectResponse
+    public function update(Request $request, Sale $sale): RedirectResponse|JsonResponse
     {
         $validated = $this->validateSaleRequest($request);
 
@@ -99,10 +176,15 @@ class SaleController extends Controller
             $this->syncSaleItemsAndStock($sale, $validated['items'], true);
         });
 
-        return redirect()->route('sales.index')->with('success', 'Transaksi berhasil diperbarui.');
+        return $this->respondAfterMutation(
+            $request,
+            'sales.index',
+            'Transaksi berhasil diperbarui.',
+            $sale->fresh()->load(['customer', 'user', 'items.product']),
+        );
     }
 
-    public function destroy(Sale $sale): RedirectResponse
+    public function destroy(Request $request, Sale $sale): RedirectResponse|JsonResponse
     {
         DB::transaction(function () use ($sale): void {
             $sale->load('items.product');
@@ -134,7 +216,12 @@ class SaleController extends Controller
             $sale->delete();
         });
 
-        return redirect()->route('sales.index')->with('success', 'Transaksi berhasil dihapus.');
+        return $this->respondAfterMutation(
+            $request,
+            'sales.index',
+            'Transaksi berhasil dihapus.',
+            ['message' => 'Sale deleted'],
+        );
     }
 
     private function validateSaleRequest(Request $request): array

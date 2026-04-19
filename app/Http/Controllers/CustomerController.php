@@ -7,11 +7,37 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::query()->latest()->paginate(10);
+        $search = trim((string) $request->string('q'));
+        $allowedSorts = [
+            'id' => 'id',
+            'name' => 'name',
+            'phone' => 'phone',
+            'email' => 'email',
+        ];
+        $sort = $request->string('sort')->toString();
+        $direction = strtolower($request->string('direction')->toString()) === 'asc' ? 'asc' : 'desc';
 
-        return view('customers.index', compact('customers'));
+        if (! array_key_exists($sort, $allowedSorts)) {
+            $sort = 'created_at';
+            $direction = 'desc';
+        }
+
+        $customers = Customer::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($nestedQuery) use ($search) {
+                    $nestedQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('address', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy($sort, $direction)
+            ->paginate(10)
+            ->withQueryString();
+
+        return $this->respond($request, 'customers.index', compact('customers', 'search', 'sort', 'direction'), $customers);
     }
 
     public function create()
@@ -28,14 +54,20 @@ class CustomerController extends Controller
             'address' => ['nullable', 'string'],
         ]);
 
-        Customer::query()->create($validated);
+        $customer = Customer::query()->create($validated);
 
-        return redirect()->route('customers.index')->with('success', 'Pelanggan berhasil ditambahkan.');
+        return $this->respondAfterMutation(
+            $request,
+            'customers.index',
+            'Pelanggan berhasil ditambahkan.',
+            $customer,
+            201,
+        );
     }
 
-    public function show(Customer $customer)
+    public function show(Request $request, Customer $customer)
     {
-        return view('customers.show', compact('customer'));
+        return $this->respond($request, 'customers.show', compact('customer'), $customer);
     }
 
     public function edit(Customer $customer)
@@ -54,13 +86,23 @@ class CustomerController extends Controller
 
         $customer->update($validated);
 
-        return redirect()->route('customers.index')->with('success', 'Pelanggan berhasil diperbarui.');
+        return $this->respondAfterMutation(
+            $request,
+            'customers.index',
+            'Pelanggan berhasil diperbarui.',
+            $customer->fresh(),
+        );
     }
 
-    public function destroy(Customer $customer)
+    public function destroy(Request $request, Customer $customer)
     {
         $customer->delete();
 
-        return redirect()->route('customers.index')->with('success', 'Pelanggan berhasil dihapus.');
+        return $this->respondAfterMutation(
+            $request,
+            'customers.index',
+            'Pelanggan berhasil dihapus.',
+            ['message' => 'Customer deleted'],
+        );
     }
 }

@@ -190,15 +190,15 @@ return [
     |
     */
 
-    'classes_body' => '',
-    'classes_brand' => '',
-    'classes_brand_text' => '',
+    'classes_body' => 'premium-shell-body',
+    'classes_brand' => 'premium-brand',
+    'classes_brand_text' => 'premium-brand-text',
     'classes_content_wrapper' => '',
     'classes_content_header' => '',
     'classes_content' => '',
-    'classes_sidebar' => 'sidebar-dark-primary elevation-4',
+    'classes_sidebar' => 'sidebar-dark-primary elevation-4 premium-sidebar',
     'classes_sidebar_nav' => '',
-    'classes_topnav' => 'navbar-white navbar-light',
+    'classes_topnav' => 'navbar-white navbar-light premium-topnav',
     'classes_topnav_nav' => 'navbar-expand',
     'classes_topnav_container' => 'container',
 
@@ -388,6 +388,26 @@ return [
     */
 
     'plugins' => [
+        'PremiumShell' => [
+            'active' => true,
+            'files' => [
+                [
+                    'type' => 'css',
+                    'asset' => true,
+                    'location' => 'css/premium-shell.css',
+                ],
+            ],
+        ],
+        'PremiumGridAsync' => [
+            'active' => true,
+            'files' => [
+                [
+                    'type' => 'js',
+                    'asset' => true,
+                    'location' => 'js/premium-grid-async-v2.js?v=20260420-2',
+                ],
+            ],
+        ],
         'Datatables' => [
             'active' => false,
             'files' => [
