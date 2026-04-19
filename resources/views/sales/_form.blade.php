@@ -35,7 +35,6 @@
             border-radius: 8px;
             padding: 16px 20px;
             color: #fff;
-            height: 100%;
             min-height: 220px;
             display: flex;
             flex-direction: column;
@@ -112,9 +111,9 @@
             <div class="row">
                 <div class="form-group col-12 col-sm-4">
                     <label>Tanggal Transaksi</label>
-                    <input type="datetime-local" name="sale_date" class="form-control"
-                        value="{{ old('sale_date', $sale?->sale_date?->format('Y-m-d\\TH:i') ?? now()->format('Y-m-d\\TH:i')) }}"
-                        required>
+                    <input type="text" name="sale_date" class="form-control"
+                        value="{{ old('sale_date', $sale?->sale_date?->format('d-m-Y') ?? now()->format('d-m-Y')) }}"
+                        placeholder="dd-MM-yyyy" pattern="\d{2}-\d{2}-\d{4}" title="Gunakan format dd-MM-yyyy" required>
                 </div>
                 <div class="form-group col-12 col-sm-4">
                     <label>Pelanggan</label>
@@ -136,6 +135,27 @@
                             </option>
                         @endforeach
                     </select>
+                </div>
+
+                <div class="col-12 mt-2">
+                    <h5 class="mb-2">Item Penjualan</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="sale-items-table" style="min-width:560px">
+                            <thead>
+                                <tr>
+                                    <th style="width:34%">Produk</th>
+                                    <th style="width:12%">Qty</th>
+                                    <th style="width:20%">Harga (Rp)</th>
+                                    <th style="width:20%">Diskon (Rp)</th>
+                                    <th style="width:14%"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="sale-items-body"></tbody>
+                        </table>
+                    </div>
+                    <button type="button" id="add-row" class="btn btn-sm btn-success mt-1">
+                        <i class="fas fa-plus mr-1"></i> Tambah Baris
+                    </button>
                 </div>
             </div>
         </div>
@@ -168,30 +188,6 @@
                     <span class="pos-change" id="pos-change">Rp 0</span>
                 </div>
             </div>
-        </div>
-    </div>
-
-    {{-- Items table --}}
-    <div class="row mt-3">
-        <div class="col-12">
-            <h5 class="mb-2">Item Penjualan</h5>
-            <div class="table-responsive">
-                <table class="table table-bordered" id="sale-items-table" style="min-width:560px">
-                    <thead>
-                        <tr>
-                            <th style="width:34%">Produk</th>
-                            <th style="width:12%">Qty</th>
-                            <th style="width:20%">Harga (Rp)</th>
-                            <th style="width:20%">Diskon (Rp)</th>
-                            <th style="width:14%"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="sale-items-body"></tbody>
-                </table>
-            </div>
-            <button type="button" id="add-row" class="btn btn-sm btn-success mt-1">
-                <i class="fas fa-plus mr-1"></i> Tambah Baris
-            </button>
         </div>
     </div>
 

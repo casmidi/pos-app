@@ -135,7 +135,7 @@
 <body>
     <div class="header">
         <h2>Laporan Pendapatan Penjualan</h2>
-        <p>Periode: {{ $dateFrom->format('d/m/Y') }} &ndash; {{ $dateTo->format('d/m/Y') }}</p>
+        <p>Periode: {{ $dateFrom->format('d-m-Y') }} &ndash; {{ $dateTo->format('d-m-Y') }}</p>
     </div>
 
     <div class="summary">
@@ -181,7 +181,7 @@
                 <tr>
                     <td>{{ $i + 1 }}</td>
                     <td>{{ $sale->invoice_no }}</td>
-                    <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
+                    <td>{{ $sale->sale_date->format('d-m-Y H:i') }}</td>
                     <td>{{ $sale->customer?->name ?? '-' }}</td>
                     <td>{{ $sale->user?->name ?? '-' }}</td>
                     <td class="num">{{ number_format($sale->subtotal, 0, ',', '.') }}</td>
@@ -211,7 +211,7 @@
         @endif
     </table>
 
-    <div class="footer">Dicetak: {{ now()->format('d/m/Y H:i') }}</div>
+    <div class="footer">Dicetak: {{ now()->format('d-m-Y H:i') }}</div>
 </body>
 
 </html>

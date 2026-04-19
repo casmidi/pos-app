@@ -74,7 +74,7 @@
             <h3 class="card-title">
                 Ranking Barang Terlaris
                 <span class="badge badge-secondary ml-md-2 mt-2 mt-md-0">
-                    {{ $dateFrom->format('d/m/Y') }} - {{ $dateTo->format('d/m/Y') }}
+                    {{ $dateFrom->format('d-m-Y') }} - {{ $dateTo->format('d-m-Y') }}
                 </span>
             </h3>
         </div>

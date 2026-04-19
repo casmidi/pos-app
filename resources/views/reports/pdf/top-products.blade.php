@@ -111,18 +111,18 @@
 <body>
     <div class="header">
         <h2>Laporan Barang Terlaris</h2>
-        <p>Periode: {{ $dateFrom->format('d/m/Y') }} &ndash; {{ $dateTo->format('d/m/Y') }}</p>
+        <p>Periode: {{ $dateFrom->format('d-m-Y') }} &ndash; {{ $dateTo->format('d-m-Y') }}</p>
     </div>
 
     <table>
         <thead>
-            <tr>
-                <th>Rank</th>
-                <th>SKU</th>
-                <th>Nama Produk</th>
-                <th class="num">Qty Terjual</th>
-                <th class="num">Total Penjualan (Rp)</th>
-                <th class="num">Jumlah Transaksi</th>
+            <div class="footer">Dicetak: {{ now()->format('d-m-Y H:i') }}</div>
+            <th>Rank</th>
+            <th>SKU</th>
+            <th>Nama Produk</th>
+            <th class="num">Qty Terjual</th>
+            <th class="num">Total Penjualan (Rp)</th>
+            <th class="num">Jumlah Transaksi</th>
             </tr>
         </thead>
         <tbody>
@@ -148,7 +148,7 @@
         </tbody>
     </table>
 
-    <div class="footer">Dicetak: {{ now()->format('d/m/Y H:i') }}</div>
+    <div class="footer">Dicetak: {{ now()->format('d-m-Y H:i') }}</div>
 </body>
 
 </html>

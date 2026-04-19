@@ -9,6 +9,8 @@ use App\Models\SaleItem;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\View\View;
@@ -17,13 +19,7 @@ class ReportController extends Controller
 {
     public function sales(Request $request): View
     {
-        $request->validate([
-            'date_from' => ['nullable', 'date'],
-            'date_to'   => ['nullable', 'date', 'after_or_equal:date_from'],
-        ]);
-
-        $dateFrom = $request->date('date_from') ?? now()->startOfMonth();
-        $dateTo   = $request->date('date_to')   ?? now()->endOfDay();
+        [$dateFrom, $dateTo] = $this->resolveDateRange($request);
 
         $sales = Sale::query()
             ->with(['customer', 'user'])
@@ -44,13 +40,7 @@ class ReportController extends Controller
 
     public function topProducts(Request $request): View
     {
-        $request->validate([
-            'date_from' => ['nullable', 'date'],
-            'date_to'   => ['nullable', 'date', 'after_or_equal:date_from'],
-        ]);
-
-        $dateFrom = $request->date('date_from') ?? now()->startOfMonth();
-        $dateTo   = $request->date('date_to') ?? now()->endOfDay();
+        [$dateFrom, $dateTo] = $this->resolveDateRange($request);
 
         $topProducts = SaleItem::query()
             ->selectRaw('product_id, SUM(qty) as total_qty, SUM(line_total) as total_sales, COUNT(DISTINCT sale_id) as transaction_count')
@@ -68,13 +58,7 @@ class ReportController extends Controller
 
     public function exportSalesExcel(Request $request): BinaryFileResponse
     {
-        $request->validate([
-            'date_from' => ['nullable', 'date'],
-            'date_to'   => ['nullable', 'date', 'after_or_equal:date_from'],
-        ]);
-
-        $dateFrom = $request->date('date_from') ?? now()->startOfMonth();
-        $dateTo   = $request->date('date_to') ?? now()->endOfDay();
+        [$dateFrom, $dateTo] = $this->resolveDateRange($request);
 
         $filename = 'laporan-penjualan-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '.xlsx';
 
@@ -83,13 +67,7 @@ class ReportController extends Controller
 
     public function exportSalesPdf(Request $request): Response
     {
-        $request->validate([
-            'date_from' => ['nullable', 'date'],
-            'date_to'   => ['nullable', 'date', 'after_or_equal:date_from'],
-        ]);
-
-        $dateFrom = $request->date('date_from') ?? now()->startOfMonth();
-        $dateTo   = $request->date('date_to') ?? now()->endOfDay();
+        [$dateFrom, $dateTo] = $this->resolveDateRange($request);
 
         $sales = Sale::query()
             ->with(['customer', 'user'])
@@ -115,13 +93,7 @@ class ReportController extends Controller
 
     public function exportTopProductsExcel(Request $request): BinaryFileResponse
     {
-        $request->validate([
-            'date_from' => ['nullable', 'date'],
-            'date_to'   => ['nullable', 'date', 'after_or_equal:date_from'],
-        ]);
-
-        $dateFrom = $request->date('date_from') ?? now()->startOfMonth();
-        $dateTo   = $request->date('date_to') ?? now()->endOfDay();
+        [$dateFrom, $dateTo] = $this->resolveDateRange($request);
 
         $filename = 'laporan-barang-terlaris-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '.xlsx';
 
@@ -130,13 +102,7 @@ class ReportController extends Controller
 
     public function exportTopProductsPdf(Request $request): Response
     {
-        $request->validate([
-            'date_from' => ['nullable', 'date'],
-            'date_to'   => ['nullable', 'date', 'after_or_equal:date_from'],
-        ]);
-
-        $dateFrom = $request->date('date_from') ?? now()->startOfMonth();
-        $dateTo   = $request->date('date_to') ?? now()->endOfDay();
+        [$dateFrom, $dateTo] = $this->resolveDateRange($request);
 
         $topProducts = SaleItem::query()
             ->selectRaw('product_id, SUM(qty) as total_qty, SUM(line_total) as total_sales, COUNT(DISTINCT sale_id) as transaction_count')
@@ -155,5 +121,34 @@ class ReportController extends Controller
         $filename = 'laporan-barang-terlaris-' . $dateFrom->format('Ymd') . '-' . $dateTo->format('Ymd') . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Resolve report date range from dd-MM-yyyy inputs.
+     *
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    private function resolveDateRange(Request $request): array
+    {
+        $request->validate([
+            'date_from' => ['nullable', 'date_format:d-m-Y'],
+            'date_to' => ['nullable', 'date_format:d-m-Y'],
+        ]);
+
+        $dateFrom = $request->filled('date_from')
+            ? Carbon::createFromFormat('d-m-Y', (string) $request->input('date_from'))->startOfDay()
+            : now()->startOfMonth();
+
+        $dateTo = $request->filled('date_to')
+            ? Carbon::createFromFormat('d-m-Y', (string) $request->input('date_to'))->endOfDay()
+            : now()->endOfDay();
+
+        if ($dateTo->lt($dateFrom)) {
+            throw ValidationException::withMessages([
+                'date_to' => 'Tanggal sampai harus setelah atau sama dengan tanggal dari.',
+            ]);
+        }
+
+        return [$dateFrom, $dateTo];
     }
 }

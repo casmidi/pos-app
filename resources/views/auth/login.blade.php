@@ -4,10 +4,10 @@
     <link rel="stylesheet" href="{{ asset('vendor/adminlte/dist/css/adminlte.min.css') }}">
 @stop
 
-@php( $login_url    = route('login') )
-@php( $register_url = null )
+@php($login_url = route('login'))
+@php($register_url = null)
 
-@section('auth_header', 'POS App – Masuk')
+@section('auth_header', 'Quantum Point Of Sales - Masuk')
 
 @section('auth_body')
     <form action="{{ route('login') }}" method="POST">
@@ -15,15 +15,8 @@
 
         {{-- Email --}}
         <div class="input-group mb-3">
-            <input
-                type="email"
-                name="email"
-                value="{{ old('email') }}"
-                class="form-control @error('email') is-invalid @enderror"
-                placeholder="Email"
-                autofocus
-                required
-            >
+            <input type="email" name="email" value="{{ old('email') }}"
+                class="form-control @error('email') is-invalid @enderror" placeholder="Email" autofocus required>
             <div class="input-group-append">
                 <div class="input-group-text"><span class="fas fa-envelope"></span></div>
             </div>
@@ -34,13 +27,8 @@
 
         {{-- Password --}}
         <div class="input-group mb-3">
-            <input
-                type="password"
-                name="password"
-                class="form-control @error('password') is-invalid @enderror"
-                placeholder="Password"
-                required
-            >
+            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
+                placeholder="Password" required>
             <div class="input-group-append">
                 <div class="input-group-text"><span class="fas fa-lock"></span></div>
             </div>

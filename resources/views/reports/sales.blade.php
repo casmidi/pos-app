@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Laporan Pendapatan Penjualan')
+@section('title', 'Penjualan Per Periode')
 
 @section('css')
     <style>
@@ -10,6 +10,21 @@
 
         .report-table table {
             min-width: 980px;
+        }
+
+        .report-summary > [class*='col-'] {
+            display: flex;
+        }
+
+        .report-summary .small-box {
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        .report-summary .small-box .inner h4 {
+            font-size: 2rem;
+            margin-bottom: 6px;
+            line-height: 1.1;
         }
 
         @media (max-width: 767.98px) {
@@ -23,7 +38,7 @@
 @stop
 
 @section('content_header')
-    <h1>Laporan Pendapatan Penjualan</h1>
+    <h1>Penjualan Per Periode</h1>
 @stop
 
 @section('content')
@@ -71,7 +86,7 @@
     </div>
 
     {{-- Summary Cards --}}
-    <div class="row mb-3">
+    <div class="row mb-3 report-summary">
         <div class="col-lg-2 col-6">
             <div class="small-box bg-gradient-info">
                 <div class="inner">
@@ -111,7 +126,7 @@
         <div class="col-lg-4 col-12">
             <div class="small-box bg-gradient-success">
                 <div class="inner">
-                    <h3>Rp {{ number_format($summary['grand_total'], 0, ',', '.') }}</h3>
+                    <h4>Rp {{ number_format($summary['grand_total'], 0, ',', '.') }}</h4>
                     <p>Total Pendapatan</p>
                 </div>
                 <div class="icon"><i class="fas fa-coins"></i></div>
@@ -125,7 +140,7 @@
             <h3 class="card-title">
                 Detail Transaksi
                 <span class="badge badge-secondary ml-md-2 mt-2 mt-md-0">
-                    {{ $dateFrom->format('d/m/Y') }} – {{ $dateTo->format('d/m/Y') }}
+                    {{ $dateFrom->format('d-m-Y') }} – {{ $dateTo->format('d-m-Y') }}
                 </span>
             </h3>
         </div>
@@ -153,7 +168,7 @@
                             <td>
                                 <a href="{{ route('sales.show', $sale) }}">{{ $sale->invoice_no }}</a>
                             </td>
-                            <td>{{ $sale->sale_date->format('d/m/Y H:i') }}</td>
+                            <td>{{ $sale->sale_date->format('d-m-Y H:i') }}</td>
                             <td>{{ $sale->customer?->name ?? '-' }}</td>
                             <td>{{ $sale->user?->name ?? '-' }}</td>
                             <td class="text-right">{{ number_format($sale->subtotal, 0, ',', '.') }}</td>
