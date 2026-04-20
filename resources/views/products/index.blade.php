@@ -50,6 +50,7 @@
                 <table class="table table-hover premium-grid-table zebra-grid">
                     <thead>
                         <tr>
+                            <th style="width:50px">Img</th>
                             <th><a href="{{ route('products.index', array_merge(request()->query(), ['sort' => 'sku', 'direction' => $sortDirection('sku'), 'page' => 1])) }}"
                                     class="grid-sort-link">SKU <i class="{{ $sortIcon('sku') }}"></i></a></th>
                             <th><a href="{{ route('products.index', array_merge(request()->query(), ['sort' => 'name', 'direction' => $sortDirection('name'), 'page' => 1])) }}"
@@ -69,6 +70,16 @@
                     <tbody>
                         @forelse ($products as $product)
                             <tr>
+                                <td>
+                                    @if ($product->image)
+                                        <img src="{{ Storage::disk('public')->url($product->image) }}"
+                                            alt="" style="width:38px;height:38px;object-fit:cover;border-radius:6px;border:1px solid #dee2e6;">
+                                    @else
+                                        <div style="width:38px;height:38px;background:#f4f4f4;border-radius:6px;border:1px solid #dee2e6;display:flex;align-items:center;justify-content:center;">
+                                            <i class="fas fa-image text-muted" style="font-size:14px"></i>
+                                        </div>
+                                    @endif
+                                </td>
                                 <td>{{ $product->sku }}</td>
                                 <td>{{ $product->name }}</td>
                                 <td>{{ $product->category?->name ?? '-' }}</td>
@@ -103,7 +114,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-4">Data produk kosong.</td>
+                                <td colspan="8" class="text-center py-4">Data produk kosong.</td>
                             </tr>
                         @endforelse
                     </tbody>

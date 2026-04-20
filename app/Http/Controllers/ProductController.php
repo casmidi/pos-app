@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -73,9 +74,16 @@ class ProductController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'description' => ['nullable', 'string'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
         $validated['is_active'] = (bool) ($validated['is_active'] ?? false);
+
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('products', 'public');
+        } else {
+            unset($validated['image']);
+        }
 
         $product = Product::query()->create($validated);
 
@@ -113,9 +121,24 @@ class ProductController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'description' => ['nullable', 'string'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
         $validated['is_active'] = (bool) ($validated['is_active'] ?? false);
+
+        if ($request->hasFile('image')) {
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $validated['image'] = $request->file('image')->store('products', 'public');
+        } elseif ($request->boolean('remove_image')) {
+            if ($product->image) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $validated['image'] = null;
+        } else {
+            unset($validated['image']);
+        }
 
         $product->update($validated);
 
@@ -129,6 +152,10 @@ class ProductController extends Controller
 
     public function destroy(Request $request, Product $product)
     {
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
+        }
+
         $product->delete();
 
         return $this->respondAfterMutation(
