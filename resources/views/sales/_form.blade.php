@@ -100,6 +100,165 @@
                 margin-bottom: 16px;
             }
         }
+
+        /* ── Payment method tabs ── */
+        .pm-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .pm-tab {
+            flex: 1;
+            padding: 8px 4px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            background: #fff;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #6c757d;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+            line-height: 1.2;
+        }
+
+        .pm-tab:hover {
+            border-color: #b45309;
+            color: #b45309;
+        }
+
+        .pm-tab.active {
+            background: #b45309;
+            border-color: #b45309;
+            color: #fff;
+        }
+
+        /* ── Paid amount display ── */
+        .numpad-display-wrap {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .numpad-display-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .numpad-display-val {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #1a2236;
+            text-align: right;
+            flex: 1;
+            letter-spacing: -0.02em;
+        }
+
+        .numpad-display-val.empty {
+            color: #d1d5db;
+        }
+
+        /* ── Numpad grid ── */
+        .numpad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 7px;
+        }
+
+        .numpad-btn {
+            background: #fff;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1a2236;
+            padding: 14px 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.12s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .numpad-btn:hover {
+            background: #f3f4f6;
+            border-color: #b45309;
+            color: #b45309;
+        }
+
+        .numpad-btn:active {
+            transform: scale(0.95);
+            background: #fffbeb;
+        }
+
+        .numpad-btn.numpad-zero {
+            grid-column: span 2;
+        }
+
+        .numpad-btn.numpad-del {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #ef4444;
+            font-size: 1rem;
+        }
+
+        .numpad-btn.numpad-del:hover {
+            background: #fee2e2;
+        }
+
+        .numpad-btn.numpad-clear {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #16a34a;
+            font-size: 0.85rem;
+            font-weight: 800;
+        }
+
+        /* ── Exact / quick-pay shortcuts ── */
+        .quickpay-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quickpay-btn {
+            flex: 1 1 0;
+            min-width: 60px;
+            padding: 6px 4px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 8px;
+            background: #fff;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #374151;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.12s;
+        }
+
+        .quickpay-btn:hover {
+            border-color: #b45309;
+            color: #b45309;
+            background: #fffbeb;
+        }
+
+        .quickpay-btn.exact-btn {
+            background: #fffbeb;
+            border-color: #fbbf24;
+            color: #b45309;
+        }
     </style>
 @endpush
 
@@ -107,7 +266,7 @@
     <div class="row">
 
         {{-- LEFT: Form fields --}}
-        <div class="col-md-8">
+        <div class="col-12 col-md-8">
             <div class="row">
                 <div class="form-group col-12 col-sm-4">
                     <label>Tanggal Transaksi</label>
@@ -140,7 +299,7 @@
                 <div class="col-12 mt-2">
                     <h5 class="mb-2">Item Penjualan</h5>
                     <div class="table-responsive">
-                        <table class="table table-bordered" id="sale-items-table" style="min-width:560px">
+                        <table class="table table-bordered" id="sale-items-table">
                             <thead>
                                 <tr>
                                     <th style="width:34%">Produk</th>
@@ -161,7 +320,7 @@
         </div>
 
         {{-- RIGHT: POS Total Display --}}
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
             <div class="pos-display">
                 <div class="pos-label">Grand Total</div>
                 <div class="pos-grand" id="pos-grand-display">Rp 0</div>
@@ -193,25 +352,74 @@
 
     {{-- Payment fields --}}
     <div class="row mt-3">
-        <div class="form-group col-12 col-sm-4">
-            <label>Pajak (Rp)</label>
-            <input type="number" step="0.01" min="0" name="tax_total" id="tax_total" class="form-control"
-                value="{{ old('tax_total', (float) ($sale?->tax_total ?? 0)) }}">
+
+        {{-- Pajak + Notes --}}
+        <div class="col-12 col-sm-4">
+            <div class="form-group">
+                <label>Pajak (Rp)</label>
+                <input type="number" step="0.01" min="0" name="tax_total" id="tax_total" class="form-control"
+                    value="{{ old('tax_total', (float) ($sale?->tax_total ?? 0)) }}">
+            </div>
+            <div class="form-group">
+                <label>Catatan</label>
+                <textarea name="notes" class="form-control" rows="2">{{ old('notes', $sale?->notes ?? '') }}</textarea>
+            </div>
         </div>
-        <div class="form-group col-12 col-sm-4">
-            <label>Total Bayar (Rp)</label>
-            {{-- Display formatted input --}}
-            <input type="text" id="paid_display" class="form-control paid-display" placeholder="0"
-                autocomplete="off">
-            {{-- Actual value for form submission --}}
-            <input type="hidden" name="paid_amount" id="paid_amount"
-                value="{{ old('paid_amount', (float) ($sale?->paid_amount ?? 0)) }}">
-        </div>
-        <div class="form-group col-12 col-sm-4">
-            <label>Catatan</label>
-            <textarea name="notes" class="form-control" rows="2">{{ old('notes', $sale?->notes ?? '') }}</textarea>
-        </div>
-    </div>
+
+        {{-- On-screen Numeric Keypad --}}
+        <div class="col-12 col-sm-8">
+
+            {{-- Payment method tabs --}}
+            <div class="pm-tabs" id="pm-tabs">
+                @foreach (['cash' => 'Cash', 'transfer' => 'Transfer', 'qris' => 'QRIS', 'debit' => 'Debit', 'credit' => 'Credit'] as $val => $label)
+                    <button type="button"
+                        class="pm-tab {{ old('payment_method', $sale?->payment_method ?? 'cash') === $val ? 'active' : '' }}"
+                        data-method="{{ $val }}">
+                        {{ $label }}
+                    </button>
+                @endforeach
+            </div>
+            <input type="hidden" name="payment_method" id="payment_method"
+                value="{{ old('payment_method', $sale?->payment_method ?? 'cash') }}">
+
+            {{-- Amount display --}}
+            <div class="numpad-display-wrap">
+                <span class="numpad-display-label">Bayar</span>
+                <div class="numpad-display-val empty" id="numpad-display">0</div>
+                <input type="hidden" name="paid_amount" id="paid_amount"
+                    value="{{ old('paid_amount', (float) ($sale?->paid_amount ?? 0)) }}">
+            </div>
+
+            {{-- Quick-pay shortcuts --}}
+            <div class="quickpay-row" id="quickpay-row">
+                <button type="button" class="quickpay-btn exact-btn" id="btn-exact">Exact</button>
+                <button type="button" class="quickpay-btn" data-add="5000">+5rb</button>
+                <button type="button" class="quickpay-btn" data-add="10000">+10rb</button>
+                <button type="button" class="quickpay-btn" data-add="20000">+20rb</button>
+                <button type="button" class="quickpay-btn" data-add="50000">+50rb</button>
+                <button type="button" class="quickpay-btn" data-add="100000">+100rb</button>
+            </div>
+
+            {{-- Numeric Keypad --}}
+            <div class="numpad-grid" id="numpad-grid">
+                <button type="button" class="numpad-btn" data-digit="1">1</button>
+                <button type="button" class="numpad-btn" data-digit="2">2</button>
+                <button type="button" class="numpad-btn" data-digit="3">3</button>
+                <button type="button" class="numpad-btn" data-digit="4">4</button>
+                <button type="button" class="numpad-btn" data-digit="5">5</button>
+                <button type="button" class="numpad-btn" data-digit="6">6</button>
+                <button type="button" class="numpad-btn" data-digit="7">7</button>
+                <button type="button" class="numpad-btn" data-digit="8">8</button>
+                <button type="button" class="numpad-btn" data-digit="9">9</button>
+                <button type="button" class="numpad-btn numpad-clear" id="numpad-clear">CLR</button>
+                <button type="button" class="numpad-btn numpad-zero" data-digit="0">0</button>
+                <button type="button" class="numpad-btn numpad-del" id="numpad-del">
+                    <i class="fas fa-backspace"></i>
+                </button>
+            </div>
+
+        </div>{{-- /col --}}
+    </div>{{-- /row --}}
 </div>
 
 @push('js')
@@ -221,38 +429,100 @@
         const body = document.getElementById('sale-items-body');
         const addBtn = document.getElementById('add-row');
         const taxInput = document.getElementById('tax_total');
-        const paidDisplay = document.getElementById('paid_display');
         const paidHidden = document.getElementById('paid_amount');
+        const numpadDisplay = document.getElementById('numpad-display');
 
-        // --- Number helpers ---
-        function fmt(value) {
-            const n = Math.round(Number(value) || 0);
-            return n.toLocaleString('id-ID'); // e.g. 1.250.000
+        // ── Number helpers ──
+        function fmt(v) { return Math.round(Number(v) || 0).toLocaleString('id-ID'); }
+        function fmtRp(v) { return 'Rp ' + fmt(v); }
+
+        // ── Numpad state ──
+        let numpadRaw = String(Number(paidHidden.value || 0) || '');
+
+        function numpadSync() {
+            const n = Number(numpadRaw) || 0;
+            paidHidden.value = n;
+            if (n > 0) {
+                numpadDisplay.textContent = n.toLocaleString('id-ID');
+                numpadDisplay.classList.remove('empty');
+            } else {
+                numpadDisplay.textContent = '0';
+                numpadDisplay.classList.add('empty');
+            }
+            refreshTotals();
         }
 
-        function fmtRp(value) {
-            return 'Rp ' + fmt(value);
+        // Init from old value
+        if (Number(paidHidden.value) > 0) {
+            numpadRaw = paidHidden.value;
+            numpadSync();
         }
 
-        // Strip non-numeric chars then format
-        function formatPaidInput(raw) {
-            const numeric = raw.replace(/[^\d]/g, '');
-            const n = Number(numeric) || 0;
-            return n === 0 ? '' : n.toLocaleString('id-ID');
-        }
+        // Digit buttons
+        document.getElementById('numpad-grid').addEventListener('click', function(e) {
+            const btn = e.target.closest('.numpad-btn');
+            if (!btn) return;
+            if (btn.dataset.digit !== undefined) {
+                if (numpadRaw === '0' || numpadRaw === '') {
+                    numpadRaw = btn.dataset.digit;
+                } else {
+                    if (numpadRaw.replace(/^-/, '').length < 12) {
+                        numpadRaw += btn.dataset.digit;
+                    }
+                }
+                numpadSync();
+            }
+        });
 
-        // --- Product select options ---
+        // Delete (backspace)
+        document.getElementById('numpad-del').addEventListener('click', () => {
+            numpadRaw = numpadRaw.slice(0, -1) || '0';
+            numpadSync();
+        });
+
+        // Clear
+        document.getElementById('numpad-clear').addEventListener('click', () => {
+            numpadRaw = '0';
+            numpadSync();
+        });
+
+        // Exact button (set paid = grand total)
+        document.getElementById('btn-exact').addEventListener('click', () => {
+            const grand = getCurrentGrand();
+            numpadRaw = String(grand);
+            numpadSync();
+        });
+
+        // Quick-pay shortcuts (add amount)
+        document.getElementById('quickpay-row').addEventListener('click', function(e) {
+            const btn = e.target.closest('.quickpay-btn[data-add]');
+            if (!btn) return;
+            const add = Number(btn.dataset.add);
+            const cur = Number(numpadRaw) || 0;
+            numpadRaw = String(cur + add);
+            numpadSync();
+        });
+
+        // ── Payment method tabs ──
+        document.getElementById('pm-tabs').addEventListener('click', function(e) {
+            const tab = e.target.closest('.pm-tab');
+            if (!tab) return;
+            this.querySelectorAll('.pm-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('payment_method').value = tab.dataset.method;
+        });
+
+        // ── Product select options ──
         function productOptions(selected) {
             let opts = '<option value="">Pilih produk</option>';
             products.forEach(p => {
                 const sel = Number(selected) === Number(p.id) ? 'selected' : '';
-                opts +=
-                    `<option value="${p.id}" data-price="${p.price}" data-stock="${p.stock}" ${sel}>${p.name} (stok: ${p.stock})</option>`;
+                opts += `<option value="${p.id}" data-price="${p.price}" data-stock="${p.stock}" ${sel}>${p.name} (stok: ${p.stock})</option>`;
             });
             return opts;
         }
 
-        // --- Row template ---
+        // ── Row template ──
         function rowTemplate(index, item = {}) {
             return `<tr>
             <td><select class="form-control form-control-sm" name="items[${index}][product_id]" required>${productOptions(item.product_id)}</select></td>
@@ -269,53 +539,42 @@
         </tr>`;
         }
 
-        // --- Refresh all totals + POS display ---
-        function refreshTotals() {
-            let subtotal = 0;
-            let discountTotal = 0;
-
+        // ── Totals ──
+        function getCurrentGrand() {
+            let subtotal = 0, discountTotal = 0;
             body.querySelectorAll('tr').forEach(row => {
-                const qty = Number(row.querySelector('.qty')?.value || 0);
-                const price = Number(row.querySelector('.price')?.value || 0);
+                subtotal      += Number(row.querySelector('.qty')?.value || 0) * Number(row.querySelector('.price')?.value || 0);
+                discountTotal += Number(row.querySelector('.discount')?.value || 0);
+            });
+            return (subtotal - discountTotal) + Number(taxInput.value || 0);
+        }
+
+        function refreshTotals() {
+            let subtotal = 0, discountTotal = 0;
+            body.querySelectorAll('tr').forEach(row => {
+                const qty      = Number(row.querySelector('.qty')?.value || 0);
+                const price    = Number(row.querySelector('.price')?.value || 0);
                 const discount = Number(row.querySelector('.discount')?.value || 0);
-                subtotal += qty * price;
+                subtotal      += qty * price;
                 discountTotal += discount;
             });
-
-            const tax = Number(taxInput.value || 0);
-            const grand = (subtotal - discountTotal) + tax;
-            const paid = Number(paidHidden.value || 0);
+            const tax    = Number(taxInput.value || 0);
+            const grand  = (subtotal - discountTotal) + tax;
+            const paid   = Number(paidHidden.value || 0);
             const change = paid - grand;
 
-            // Update POS display
             document.getElementById('pos-grand-display').textContent = fmtRp(grand);
-            document.getElementById('pos-subtotal').textContent = fmtRp(subtotal);
-            document.getElementById('pos-discount').textContent = fmtRp(discountTotal);
-            document.getElementById('pos-tax').textContent = fmtRp(tax);
-            document.getElementById('pos-paid').textContent = fmtRp(paid);
+            document.getElementById('pos-subtotal').textContent      = fmtRp(subtotal);
+            document.getElementById('pos-discount').textContent      = fmtRp(discountTotal);
+            document.getElementById('pos-tax').textContent           = fmtRp(tax);
+            document.getElementById('pos-paid').textContent          = fmtRp(paid);
 
             const changeEl = document.getElementById('pos-change');
             changeEl.textContent = fmtRp(Math.abs(change));
             changeEl.classList.toggle('minus', change < 0);
         }
 
-        // --- Paid display auto-format ---
-        paidDisplay.addEventListener('input', () => {
-            const raw = paidDisplay.value;
-            const numeric = raw.replace(/[^\d]/g, '');
-            paidHidden.value = numeric || '0';
-            // reformat display (cursor jumps to end — acceptable for POS)
-            paidDisplay.value = Number(numeric) > 0 ? Number(numeric).toLocaleString('id-ID') : '';
-            refreshTotals();
-        });
-
-        // Initialise paid display with existing value
-        const initPaid = Number(paidHidden.value || 0);
-        if (initPaid > 0) {
-            paidDisplay.value = initPaid.toLocaleString('id-ID');
-        }
-
-        // --- Format display input (Harga / Diskon) ---
+        // ── Row add ──
         function initRowDisplays(row, priceVal, discountVal) {
             const pd = row.querySelector('.price-display');
             const dd = row.querySelector('.discount-display');
@@ -323,7 +582,6 @@
             if (dd && Number(discountVal) > 0) dd.value = Number(discountVal).toLocaleString('id-ID');
         }
 
-        // --- Row add ---
         function addRow(item = {}) {
             const idx = body.querySelectorAll('tr').length;
             body.insertAdjacentHTML('beforeend', rowTemplate(idx, item));
@@ -334,7 +592,6 @@
 
         addBtn.addEventListener('click', () => addRow());
 
-        // Product select → auto-fill price
         body.addEventListener('change', event => {
             if (event.target.matches('select[name$="[product_id]"]')) {
                 const opt = event.target.options[event.target.selectedIndex];
@@ -348,7 +605,6 @@
             refreshTotals();
         });
 
-        // Auto-format Harga & Diskon inputs
         body.addEventListener('input', event => {
             const el = event.target;
             if (el.classList.contains('price-display') || el.classList.contains('discount-display')) {
@@ -370,7 +626,7 @@
 
         taxInput.addEventListener('input', refreshTotals);
 
-        // Bootstrap rows
+        // ── Bootstrap rows ──
         if (selectedItems.length > 0) {
             selectedItems.forEach(item => addRow(item));
         } else {
