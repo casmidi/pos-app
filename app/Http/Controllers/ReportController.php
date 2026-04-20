@@ -21,11 +21,45 @@ class ReportController extends Controller
     {
         [$dateFrom, $dateTo] = $this->resolveDateRange($request);
 
-        $sales = Sale::query()
-            ->with(['customer', 'user'])
-            ->whereBetween('sale_date', [$dateFrom->startOfDay(), $dateTo->endOfDay()])
-            ->latest('sale_date')
-            ->get();
+        $allowedSorts = [
+            'invoice_no'     => 'sales.invoice_no',
+            'sale_date'      => 'sales.sale_date',
+            'customer'       => 'customer',
+            'cashier'        => 'cashier',
+            'subtotal'       => 'sales.subtotal',
+            'discount_total' => 'sales.discount_total',
+            'tax_total'      => 'sales.tax_total',
+            'grand_total'    => 'sales.grand_total',
+            'payment_method' => 'sales.payment_method',
+        ];
+
+        $sort      = $request->string('sort')->toString();
+        $direction = strtolower($request->string('direction')->toString()) === 'asc' ? 'asc' : 'desc';
+
+        if (! array_key_exists($sort, $allowedSorts)) {
+            $sort      = 'sale_date';
+            $direction = 'desc';
+        }
+
+        $query = Sale::query()->with(['customer', 'user'])
+            ->whereBetween('sale_date', [$dateFrom->startOfDay(), $dateTo->endOfDay()]);
+
+        if ($sort === 'customer') {
+            $query->leftJoin('customers as rep_customers', 'rep_customers.id', '=', 'sales.customer_id')
+                ->select('sales.*')
+                ->orderBy('rep_customers.name', $direction)
+                ->orderBy('sales.id', 'desc');
+        } elseif ($sort === 'cashier') {
+            $query->leftJoin('users as rep_users', 'rep_users.id', '=', 'sales.user_id')
+                ->select('sales.*')
+                ->orderBy('rep_users.name', $direction)
+                ->orderBy('sales.id', 'desc');
+        } else {
+            $query->orderBy($allowedSorts[$sort], $direction)
+                ->orderBy('sales.id', 'desc');
+        }
+
+        $sales = $query->get();
 
         $summary = [
             'total_transactions' => $sales->count(),
@@ -35,7 +69,7 @@ class ReportController extends Controller
             'grand_total'        => $sales->sum('grand_total'),
         ];
 
-        return view('reports.sales', compact('sales', 'summary', 'dateFrom', 'dateTo'));
+        return view('reports.sales', compact('sales', 'summary', 'dateFrom', 'dateTo', 'sort', 'direction'));
     }
 
     public function topProducts(Request $request): View

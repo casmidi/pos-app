@@ -2,7 +2,8 @@
 
 @section('title', 'Penjualan Per Periode')
 
-@section('css')
+@push('css')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         .report-filter .form-control {
             min-width: 180px;
@@ -27,15 +28,32 @@
             line-height: 1.1;
         }
 
-        @media (max-width: 767.98px) {
+        .report-sort-link {
+            color: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            white-space: nowrap;
+        }
 
+        .report-sort-link:hover {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .report-sort-link i {
+            font-size: 0.78rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 767.98px) {
             .report-filter .form-control,
             .report-filter .btn {
                 width: 100%;
             }
         }
     </style>
-@stop
+@endpush
 
 @section('content_header')
     <h1>Penjualan Per Periode</h1>
@@ -51,18 +69,24 @@
         </div>
         <div class="card-body">
             <form method="GET" action="{{ route('reports.sales') }}" class="report-filter row align-items-end">
+                <input type="hidden" name="sort" value="{{ $sort ?? 'sale_date' }}">
+                <input type="hidden" name="direction" value="{{ $direction ?? 'desc' }}">
                 <div class="form-group col-12 col-md-4 col-lg-3 mb-2">
                     <label>Dari</label>
-                    <input type="date" name="date_from" value="{{ $dateFrom->format('Y-m-d') }}"
-                        class="form-control @error('date_from') is-invalid @enderror">
+                    <input type="text" name="date_from" id="rpt-date-from"
+                        value="{{ $dateFrom->format('d-m-Y') }}"
+                        class="form-control @error('date_from') is-invalid @enderror"
+                        placeholder="dd-MM-yyyy" autocomplete="off">
                     @error('date_from')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
                 </div>
                 <div class="form-group col-12 col-md-4 col-lg-3 mb-2">
                     <label>Sampai</label>
-                    <input type="date" name="date_to" value="{{ $dateTo->format('Y-m-d') }}"
-                        class="form-control @error('date_to') is-invalid @enderror">
+                    <input type="text" name="date_to" id="rpt-date-to"
+                        value="{{ $dateTo->format('d-m-Y') }}"
+                        class="form-control @error('date_to') is-invalid @enderror"
+                        placeholder="dd-MM-yyyy" autocomplete="off">
                     @error('date_to')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
@@ -134,6 +158,17 @@
         </div>
     </div>
 
+    @php
+        $rptSortDir = fn($col) => ($sort ?? '') === $col && ($direction ?? 'desc') === 'asc' ? 'desc' : 'asc';
+        $rptSortIcon = fn($col) => ($sort ?? '') === $col
+            ? (($direction ?? 'desc') === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down')
+            : 'fas fa-sort';
+        $rptSortUrl = fn($col) => route('reports.sales', array_merge(
+            request()->only('date_from', 'date_to'),
+            ['sort' => $col, 'direction' => $rptSortDir($col)]
+        ));
+    @endphp
+
     {{-- Detail Table --}}
     <div class="card card-outline card-success">
         <div class="card-header">
@@ -149,15 +184,15 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Invoice</th>
-                        <th>Tanggal</th>
-                        <th>Pelanggan</th>
-                        <th>Kasir</th>
-                        <th class="text-right">Subtotal</th>
-                        <th class="text-right">Diskon</th>
-                        <th class="text-right">Pajak</th>
-                        <th class="text-right">Total</th>
-                        <th>Pembayaran</th>
+                        <th><a href="{{ $rptSortUrl('invoice_no') }}" class="report-sort-link">Invoice <i class="{{ $rptSortIcon('invoice_no') }}"></i></a></th>
+                        <th><a href="{{ $rptSortUrl('sale_date') }}" class="report-sort-link">Tanggal <i class="{{ $rptSortIcon('sale_date') }}"></i></a></th>
+                        <th><a href="{{ $rptSortUrl('customer') }}" class="report-sort-link">Pelanggan <i class="{{ $rptSortIcon('customer') }}"></i></a></th>
+                        <th><a href="{{ $rptSortUrl('cashier') }}" class="report-sort-link">Kasir <i class="{{ $rptSortIcon('cashier') }}"></i></a></th>
+                        <th class="text-right"><a href="{{ $rptSortUrl('subtotal') }}" class="report-sort-link justify-content-end">Subtotal <i class="{{ $rptSortIcon('subtotal') }}"></i></a></th>
+                        <th class="text-right"><a href="{{ $rptSortUrl('discount_total') }}" class="report-sort-link justify-content-end">Diskon <i class="{{ $rptSortIcon('discount_total') }}"></i></a></th>
+                        <th class="text-right"><a href="{{ $rptSortUrl('tax_total') }}" class="report-sort-link justify-content-end">Pajak <i class="{{ $rptSortIcon('tax_total') }}"></i></a></th>
+                        <th class="text-right"><a href="{{ $rptSortUrl('grand_total') }}" class="report-sort-link justify-content-end">Total <i class="{{ $rptSortIcon('grand_total') }}"></i></a></th>
+                        <th><a href="{{ $rptSortUrl('payment_method') }}" class="report-sort-link">Pembayaran <i class="{{ $rptSortIcon('payment_method') }}"></i></a></th>
                         <th></th>
                     </tr>
                 </thead>
@@ -207,3 +242,17 @@
         </div>
     </div>
 @stop
+
+@push('js')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var opts = {
+                dateFormat: 'd-m-Y',
+                allowInput: true,
+            };
+            flatpickr('#rpt-date-from', opts);
+            flatpickr('#rpt-date-to', opts);
+        });
+    </script>
+@endpush
